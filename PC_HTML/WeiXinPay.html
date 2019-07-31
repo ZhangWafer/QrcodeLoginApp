@@ -1,0 +1,56 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title></title>
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<link href="css/mui.css" rel="stylesheet" />
+		<script src="js/jquery-3.3.1.js" type="text/javascript" charset="utf-8"></script>
+		<script src="js/cordova.js" type="text/javascript" charset="utf-8"></script>
+	</head>
+	<body>
+		<script src="js/mui.js"></script>
+		<script type="text/javascript">
+			mui.init()
+		</script>
+		<header class="mui-bar mui-bar-nav">
+			<a class="mui-action-back mui-icon mui-icon-left-nav mui-pull-left"></a>
+			<h1 class="mui-title">微信支付</h1>
+		</header>
+		<div class="mui-content">
+			<div style="margin: 20px;">
+				<div class="mui-input-row">
+					<label>充值金额</label>
+					<input type="text" placeholder="请输入金额">
+				</div>
+			</div>
+			<div style="margin: 20px;">
+				<button type="button" onclick="buttonClick()" class="mui-btn mui-btn-green mui-btn-block">按钮</button>
+			</div>
+		</div>
+	</body>
+	<script type="text/javascript">
+		//		Map < String, String > extraHeaders = new HashMap < String, String > ();
+		//		extraHeaders.put("Referer", "https://www.zhgaft.top");
+		//		mWebView.loadUrl(mUrl, extraHeaders);
+		function buttonClick() {
+			postUrl = "https://219.131.222.91:7000/login";
+			//postUrl = "http://127.0.0.1:5000/login";
+			$.ajax({          
+					url: postUrl,
+				    data: {'name': 'ssss'},
+				    dataType: 'json', //【这里要小心啊，不要用jsonp，一定是json】
+				    type: 'post',
+					async: false,
+				    crossDomain: true, //【这个很重要，一定要加】
+				    success: function(result) {
+					alert(result.webUrl);
+					var gotoLink = document.createElement('a');
+					gotoLink.href = result.webUrl;
+					document.body.appendChild(gotoLink);
+					gotoLink.click();
+				}
+			});
+		}
+	</script>
+</html>

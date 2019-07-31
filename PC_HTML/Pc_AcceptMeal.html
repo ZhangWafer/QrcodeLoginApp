@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title></title>
+    <script src="../js/jquery-3.3.1.js" type="text/javascript" charset="utf-8"></script>
+	<script src="../js/bootstrap.js" type="text/javascript" charset="utf-8"></script>
+	<script src="../js/bootstrap-select.js" type="text/javascript" charset="utf-8"></script>
+	<link rel="stylesheet" type="text/css" href="../css/boostrap/bootstrap.css"/>
+	<link rel="stylesheet" type="text/css" href="../css/select/bootstrap-select.css"/>
+	<link rel="stylesheet" type="text/css" href="../css/button.css"/>
+</head>
+	<body background="../img/login-bg.png">
+		<div  style="margin-top:10px ;">
+			<a href="Pc_AcceptChoose.html" style="color: white;">
+			<span class="glyphicon glyphicon-chevron-left" style="font-size: 15px;"></span><h4 style="display: inline;">返回</h4>
+			</a>
+        </div>
+		<form style="margin-top:20px;">
+		<div class="text-center">
+			<h1 id="h1" class="text-center"style="margin-bottom: 50px; color: white;" >工作餐申请 </h1>
+		</div>
+    	<div class="text-center" style="margin-bottom: 20px;">
+		<div class="btn-group">
+	    	<select id="select1" class="selectpicker" >
+			    <option >选择日期</option>
+			</select>
+		</div>
+		</div>
+		<div class="text-center" style="margin-bottom: 20px;">
+		<div class="btn-group">
+	    	<select id="select2" class="selectpicker" >
+			    <option value="1">早餐</option>
+			    <option value="2">午餐</option>
+			    <option value="3">晚餐</option>
+			    <option value="4">宵夜</option>
+			</select>
+		</div>
+		</div>
+		<div class="text-center" >
+		<div class="btn-group">
+	    	<select id="select3" class="selectpicker" >
+			    <option value="16">机关饭堂(二楼)</option>
+			    <option value="17">机关饭堂(三楼)</option>
+			</select>
+		</div>
+		</div>
+		<div class="text-center" style="margin-top: 20px;">
+			<input type="text" class="btn " style="width: 220px;" id="personNumber" placeholder="用餐人数" oninput = "value=value.replace(/[^\d]/g,'')" />
+		</div>
+		<div class="text-center" style="margin-top: 20px;">
+			<textarea style="width: 220px;height: 100px;"  id="inputContent" placeholder="用餐描述"></textarea>
+		</div>
+        <div class="text-center" style="margin-top:20px ;">
+        <input id="submitButton" type="button" class="btn btn-primary button-pill" onclick="onclick_function()" value="确定" style="width: 200px;font-size: 25px;"></input>
+        </div>
+    </form>
+	</body>
+	<script type="text/javascript">
+		var url_header=localStorage.getItem("url_header");
+		var personId=localStorage.getItem("personId");
+		var imforCardNum=localStorage.getItem("account");
+		//去重方法
+			function unique4(arr){
+			  var hash=[];
+			  for (var i = 0; i < arr.length; i++) {
+			    for (var j = i+1; j < arr.length; j++) {
+			      if(arr[i]===arr[j]){
+			        ++i;
+			      }
+			    }
+			      hash.push(arr[i]);
+			  }
+			  return hash;
+			}
+//		var arr = [112,112,34,'你好',112,112,34,'你好','str','str1'];
+//		alert(arr.unique3());
+		
+		//拿取价格
+		var breakfastPrice=0;
+		var lunchPrice=0;
+		var dinnerPrice=0;
+		var AccountMoney=0;
+		var price_url=url_header+"/Interface/PC/GetPcReceptionPrice.ashx"
+					$.ajax({
+                    url:price_url,
+                    data:{'new':'ssss'},
+                    dataType:'json', 
+                    type:'post',
+					async:false,
+                    crossDomain: true, 
+                    success:function(result){
+						breakfastPrice=result.breakfast;
+						lunchPrice=result.lunch;
+						dinnerPrice=result.supper;
+					}});
+		//拿取余额
+					$.ajax({
+                    url:url_header+"/Interface/PC/GetPcStaff.ashx?informationNum="+imforCardNum,
+                    data:{'new':'ssss'},
+                    dataType:'json', 
+                    type:'post',
+					async:false,
+                    crossDomain: true, 
+                    success:function(result){
+						AccountMoney=result.pcInfo.Amount;
+					}});
+		
+		//选择日期数组
+		var selectdays=[];
+		//选择饭堂数组
+		var selectCateen=[];
+		//从cookie看是警员还是职工
+		var PcBool=localStorage.getItem("PcWorkerBool");
+		
+		//ajax拿取排餐数据
+		if(PcBool==1)
+		{
+			var menu_url=url_header+"/Interface/PC/GetPcCookbookSetInDate.ashx?pcid="+personId;
+		}
+		else
+		{
+			var menu_url=url_header+"/Interface/Worker/GetWorkerCookbookSetInDate.ashx?WorkerId="+personId;
+		}
+		
+		var RResult=null;
+		
+		function getMenu () {
+			$.ajax({
+                    url:menu_url,
+                    data:{'new':'ssss'},
+                    dataType:'json', 
+                    type:'post',
+					async:false,
+                    crossDomain: true, 
+                    success:function(result){
+						
+						RResult=result;
+                        if(result.Msg=="失败"){return;}
+						//返回排餐数据数量
+					 	var dataNum = result.pccsidList.length;
+					 	if(dataNum==0)
+					 	{
+					 		$("#submitButton").attr("disabled","disabled");
+					 	}
+					 	//选择餐次数组
+						for (var i=0;i<dataNum;i++) {
+							//分割日期与时间
+							var arr =	result.pccsidList[i].ChooseDate.split("T");
+							selectdays[i]= arr[0];
+							selectCateen[i]=result.pccsidList[i].CafeteriaName;
+						}
+						//去重复日期
+						var selectdays_uni=unique4(selectdays);
+						selectCateen= unique4(selectCateen);
+						//把去重复的饭堂添加进去
+//						$("#select3").empty();
+//						selectCateen.forEach(function  (val,index) {
+//							$("#select3").append("<option value='"+val+"'>"+val+"</option>"); //为Select追加一个Option(下拉项) 
+//						});
+						
+						//添加进去select
+						 $("#select1").empty();
+						selectdays_uni.forEach(function  (val,index) {
+						$("#select1").append("<option value='"+val+"'>"+val+"</option>"); //为Select追加一个Option(下拉项) 
+						});	
+                    },
+                    error:function(result){
+                        console.log(result);
+                    }
+                });
+		}
+		getMenu();
+		
+		//跳转并且传值
+		function onclick_function () {
+			if($("#select1").val()==""||$("#select2").val()==""||$("#select3").val()=="")
+			{
+				alert("选择条件不得为空");
+				return;
+			}
+			//把选择的条件暂存起来
+			var SelectedDay=$("#select1").val();
+			var SelectedMeal=$("#select2").find("option:selected").val();//早午晚，值：1,2,3
+			var SelectedCanteen=$("#select3").val();
+			
+			localStorage.setItem("SelectedDay",SelectedDay);
+			localStorage.setItem("SelectedMeal",SelectedMeal);
+			localStorage.setItem("SelectedCanteen",SelectedCanteen);
+			//拿出选择排餐的id号，传到下一个页面
+			var ExistBool=false;
+			for (var i=0;i<RResult.pccsidList.length;i++) {
+			var resultDate=RResult.pccsidList[i].ChooseDate.split('T');
+			if(resultDate[0]==SelectedDay&&RResult.pccsidList[i].CookbookEnum==SelectedMeal&& RResult.pccsidList[i].CafeteriaId==SelectedCanteen)
+			{
+				localStorage.setItem("selectedOrderDetailID",RResult.pccsidList[i].Id);
+				localStorage.setItem("canteenBool",RResult.pccsidList[i].CafeteriaTypeEnum);
+				ExistBool=true;
+				break;
+			}
+			}
+			//判断是否存在，存在就跳转
+			if(ExistBool)
+			{
+				var orderId=RResult.pccsidList[i].Id;
+				var personId2=localStorage.getItem("personId");
+				//人数变量
+				var pernumbers=$("#personNumber").val();
+				//描述内容
+				var content=$("#inputContent").val();
+				
+				if(pernumbers=="0")
+				{
+					alert("用餐人数不得为0");
+					return;
+				}
+				
+				
+				//判断余额是否足够
+				var thisPrice=0;
+				switch (SelectedMeal){
+					case "1":
+					thisPrice=breakfastPrice
+						break;
+					case "2":
+					thisPrice=lunchPrice;
+						break;
+					case "3":
+					thisPrice=dinnerPrice;
+						break;						
+				}
+				if((AccountMoney-pernumbers*thisPrice)<0)
+				{
+					alert("余额不足！");
+					return;
+				}
+				
+				//接待餐url
+				var accept_url=url_header+"/Interface/PC/PCStaffReceptionOrderMeal.ashx?pcid="+personId2+"&cookbookSetInDateId="+orderId+"&persons="+pernumbers+"&description="+content;
+				accept_url=encodeURI(accept_url);
+				$.ajax({
+                url:accept_url,
+                data:{'new':'ssss'},
+                dataType:'json', 
+                type:'post',
+				async:false,
+                crossDomain: true, 
+                success:function(result){
+					if(result.Msg=="招待餐报餐成功")
+					{
+						alert("提交成功！");
+						window.location.href="Pc_menuPage.html";
+					}
+					else
+					{
+							alert("服务器错误!提交失败");
+					}
+					},
+                    error:function(result){
+						alert("服务器错误!提交失败");
+                        console.log(result);
+                    }
+                });
+			}
+			else
+			{
+				alert("不存在此餐");
+			}
+		}
+
+	</script>
+</html>
